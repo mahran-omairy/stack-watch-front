@@ -73,8 +73,8 @@ export default {
     valid: false,
     name: "",
     nameRules: [
-      v => !!v || "E-mail is required",
-      v => v.length <= 191 || "Password must be more than 191 characters"
+      v => !!v || "Name is required",
+      v => v.length <= 191 || "Name must be more than 191 characters"
     ],
     email: "",
     emailRules: [

@@ -95,7 +95,7 @@
               </v-layout>
             </v-flex>
           </v-layout>
-          <v-dialog v-model="dialog" max-width="290">
+          <v-dialog v-model="dialog" persistent max-width="290">
             <v-card>
               <v-card-title class="headline">Delete Confirmation</v-card-title>
 
@@ -190,7 +190,7 @@ export default {
     },
     deleteAccount() {
       this.$store.dispatch("user/deleteAccount");
-      this.dialog = false
+      this.dialog = false;
     }
   },
   mounted() {

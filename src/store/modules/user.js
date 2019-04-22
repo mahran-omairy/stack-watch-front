@@ -3,7 +3,6 @@ import { baseUrl } from "../../api";
 import router from "../../router";
 // initial state
 const state = {
-  token: null,
   user: {},
   errors: [],
   success:[],
