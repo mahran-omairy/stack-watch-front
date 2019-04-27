@@ -1,100 +1,98 @@
 <template>
   <div>
-      <v-container fluid>
-        <v-layout column fill-height>
-          
-          <v-layout row align-center justify-center>
-            <v-flex xs5>
-              <div class="font-weight-medium total">{{income-spent | currency }}</div>
-              <v-layout class="summary" row justify-space-around>
-                <v-flex xs3 text-xs-center>
-                  <p class="font-weight-light">Spent</p>
-                  <p class="font-weight-regular">{{spent | currency }}</p>
-                </v-flex>
+    <v-container fluid>
+      <v-layout column fill-height>
+        <v-layout row align-center justify-center>
+          <v-flex xs5>
+            <div class="font-weight-medium total teal--text">{{income-spent | currency }}</div>
+            <v-layout class="summary" row justify-space-around>
+              <v-flex xs3 text-xs-center>
+                <p class="font-weight-light">Spent</p>
+                <p class="font-weight-regular red--text">{{spent | currency }}</p>
+              </v-flex>
 
-                <v-flex xs3 text-xs-center>
-                  <p class="font-weight-light">Income</p>
-                  <p class="font-weight-regular">{{income | currency }}</p>
-                </v-flex>
-              </v-layout>
-            </v-flex>
-          </v-layout>
-          <v-layout row align-center justify-center>
-            <v-flex xs5>
-              <v-layout align-center justify-center row fill-height>
-                <v-card>
-                  <v-card-title primary-title>
-                    <v-flex xs12>
-                      <v-layout align-center justify-space-between row>
-                        <v-flex xs11>
-                          <h3 class="headline mb-0">Categories</h3>
-                        </v-flex>
-                        <v-flex xs1>
-                          <v-tooltip bottom>
+              <v-flex xs3 text-xs-center>
+                <p class="font-weight-light">Income</p>
+                <p class="font-weight-regular green--text">{{income | currency }}</p>
+              </v-flex>
+            </v-layout>
+          </v-flex>
+        </v-layout>
+        <v-layout row align-center justify-center>
+          <v-flex xs5>
+            <v-layout align-center justify-center row fill-height>
+              <v-card>
+                <v-card-title primary-title>
+                  <v-flex xs12>
+                    <v-layout align-center justify-space-between row>
+                      <v-flex xs11>
+                        <h3 class="headline mb-0">Categories</h3>
+                      </v-flex>
+                      <v-flex xs1>
+                        <v-tooltip bottom>
+                          <template v-slot:activator="{ on }">
+                            <v-btn flat icon @click="openDialog" v-on="on">
+                              <v-icon>fas fa-plus</v-icon>
+                            </v-btn>
+                          </template>
+                          <span>Add Category</span>
+                        </v-tooltip>
+                      </v-flex>
+                    </v-layout>
+                  </v-flex>
+                  <v-layout column>
+                    <v-list subheader>
+                      <v-list-tile v-for="(category, index) in categories" :key="index" avatar>
+                        <v-list-tile-avatar>
+                          <v-icon class="grey lighten-1 white--text">fa {{ category.icon }}</v-icon>
+                        </v-list-tile-avatar>
+
+                        <v-list-tile-content>
+                          <v-list-tile-title v-html="category.name"></v-list-tile-title>
+                        </v-list-tile-content>
+                        <v-list-tile-action>
+                          <v-btn icon @click="viewCategory(category.id)">
+                            <v-icon>fas fa-chevron-right</v-icon>
+                          </v-btn>
+                        </v-list-tile-action>
+                        <v-list-tile-action>
+                          <v-menu bottom left>
                             <template v-slot:activator="{ on }">
-                              <v-btn flat icon @click="openDialog" v-on="on">
-                                <v-icon>fas fa-plus</v-icon>
+                              <v-btn icon v-on="on">
+                                <v-icon>more_vert</v-icon>
                               </v-btn>
                             </template>
-                            <span>Add Category</span>
-                          </v-tooltip>
-                        </v-flex>
-                      </v-layout>
-                    </v-flex>
-                    <v-layout column>
-                      <v-list subheader>
-                        <v-list-tile                          
-                          v-for="(category, index) in categories"
-                          :key="index"
-                          avatar
-                        >
-                          <v-list-tile-avatar>
-                            <v-icon class="grey lighten-1 white--text">fa {{ category.icon }}</v-icon>
-                          </v-list-tile-avatar>
 
-                          <v-list-tile-content>
-                            <v-list-tile-title v-html="category.name"></v-list-tile-title>
-                          </v-list-tile-content>
-<v-list-tile-action>
-                             <v-btn icon @click="viewCategory(category.id)">
-                                  <v-icon>fas fa-chevron-right</v-icon>
-                                </v-btn>
-
-                          </v-list-tile-action>
-                          <v-list-tile-action>
-                            <v-menu bottom left>
-                              <template v-slot:activator="{ on }">
-                                <v-btn icon v-on="on">
-                                  <v-icon>more_vert</v-icon>
-                                </v-btn>
-                              </template>
-
-                              <v-list>
-                                <v-list-tile @click="confirmEdit(category)">
-                                  <v-list-tile-title>Edit</v-list-tile-title>
-                                </v-list-tile>
-                                <v-list-tile @click="confirmDelete(category)">
-                                  <v-list-tile-title>Delete</v-list-tile-title>
-                                </v-list-tile>
-                              </v-list>
-                            </v-menu>
-                          </v-list-tile-action>
-                          
-                          
-                        </v-list-tile>
-                      </v-list>
-                    </v-layout>
-                  </v-card-title>
-                </v-card>
-              </v-layout>
-            </v-flex>
-          </v-layout>
+                            <v-list>
+                              <v-list-tile @click="confirmEdit(category)">
+                                <v-list-tile-title>Edit</v-list-tile-title>
+                              </v-list-tile>
+                              <v-list-tile @click="confirmDelete(category)">
+                                <v-list-tile-title>Delete</v-list-tile-title>
+                              </v-list-tile>
+                            </v-list>
+                          </v-menu>
+                        </v-list-tile-action>
+                      </v-list-tile>
+                    </v-list>
+                  </v-layout>
+                </v-card-title>
+              </v-card>
+            </v-layout>
+          </v-flex>
         </v-layout>
-      </v-container>
-   
+      </v-layout>
+    </v-container>
+
     <v-layout row justify-center>
       <!-- create dialog -->
-      <v-dialog v-model="dialog" persistent fullscreen hide-overlay transition="dialog-bottom-transition">
+      <v-dialog
+        v-model="dialog"
+        persistent
+        fullscreen
+        hide-overlay
+        transition="dialog-bottom-transition"
+      >
         <v-card>
           <v-toolbar color="teal" dark>
             <v-toolbar-title>New Category</v-toolbar-title>
@@ -105,10 +103,15 @@
           </v-toolbar>
           <v-layout row justify-center>
             <v-flex xs5>
-              <v-list subheader v-if="categories.length==0">
+              <v-list subheader v-if="settingsCategories.length">
                 <v-subheader>Pre-defined categories</v-subheader>
-              {{errors}}
-                <v-list-tile v-for="(category, index) in settingsCategories" :key="index" avatar>
+                <v-list-tile v-for="(category, index) in settingsCategories.filter( el => {
+                    for (let i =0; i < categories.length; i++){
+                        if(el.name === categories[i].name )
+                        return false;
+                    }
+                    return true;
+                  })" :key="index" avatar>
                   <v-list-tile-avatar>
                     <v-icon class="grey lighten-1 white--text">fa {{ category.icon }}</v-icon>
                   </v-list-tile-avatar>
@@ -237,23 +240,20 @@
 
 
 <script>
-
 import { mapGetters } from "vuex";
 import axios from "axios";
 import { baseUrl } from "../api";
 import _ from "lodash";
 export default {
   name: "CategoriesList",
-  components: {
-
-  },
+  components: {},
   data: () => ({
     dialog: false,
     settingsCategories: {},
     icons: [],
     icon: "fa-coins",
     snackbarSuccess: false,
-    snackbarError:false,
+    snackbarError: false,
     category: "",
     valid: false,
     deleteDialog: false,
@@ -272,7 +272,7 @@ export default {
       errors: "getErrors",
       success: "getSuccess",
       income: "getIncome",
-      spent:"getSpent"
+      spent: "getSpent"
     })
   },
   watch: {
@@ -280,6 +280,7 @@ export default {
       if (_.isEmpty(newVal)) {
         this.snackbarSuccess = false;
       } else {
+        this.$store.dispatch("category/getCategories");
         this.snackbarSuccess = true;
       }
     },
@@ -314,7 +315,7 @@ export default {
 
     this.$store.dispatch("category/emptyMessages");
     this.$store.dispatch("category/getCategories");
-     this.$store.dispatch("category/getSummary");
+    this.$store.dispatch("category/getSummary");
   },
   methods: {
     createCategory() {
@@ -334,12 +335,12 @@ export default {
     },
 
     closeDialog() {
-      this.$store.dispatch("category/getCategories");
+      
       this.$store.dispatch("category/emptyMessages");
       this.dialog = false;
     },
     viewCategory(id) {
-     this.$router.push("/overview/"+id)
+      this.$router.push("/overview/" + id);
     },
     deleteCategory() {
       this.$store.dispatch("category/deleteCategory", {
