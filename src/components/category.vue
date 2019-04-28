@@ -75,7 +75,7 @@
                     v-model="date"
                     @input="dateChange"
                     type="month"
-                    min="2017-06"
+                    min="2018-01"
                     :max="currentMonth"
                   ></v-date-picker>
                 </v-menu>
@@ -92,7 +92,7 @@
                         <v-flex xs1>
                           <v-tooltip bottom>
                             <template v-slot:activator="{ on }">
-                              <v-btn flat icon v-on="on">
+                              <v-btn flat icon v-on="on" @click="dialog=true">
                                 <v-icon>fas fa-plus</v-icon>
                               </v-btn>
                             </template>
@@ -185,6 +185,116 @@
               </v-layout>
             </v-flex>
           </v-layout>
+          <!-- create dialog -->
+          <v-dialog
+            v-model="dialog"
+            persistent
+            fullscreen
+            hide-overlay
+            transition="dialog-bottom-transition"
+          >
+            <v-card>
+              <v-toolbar color="teal" dark>
+                <v-toolbar-title>New Envelop</v-toolbar-title>
+                <v-spacer></v-spacer>
+                <v-toolbar-items>
+                  <v-btn dark flat @click="closeDialog">Close</v-btn>
+                </v-toolbar-items>
+              </v-toolbar>
+              <v-layout row justify-center>
+                <v-flex xs5>
+                  <v-btn-toggle class="type-button" mandatory v-model="type">
+                    <v-layout>
+                      <v-flex xs6>
+                        <v-btn @click="loadIcons('spent_envelops')" block flat>Spent</v-btn>
+                      </v-flex>
+                      <v-flex @click="loadIcons('income_envelops')" xs6>
+                        <v-btn block flat>Income</v-btn>
+                      </v-flex>
+                    </v-layout>
+                  </v-btn-toggle>
+
+                  <v-form v-model="valid">
+                    <v-container fluid>
+                      <v-layout>
+                        <v-flex xs4>
+                          <v-menu
+                            v-model="datePicker"
+                            :close-on-content-click="false"
+                            :nudge-right="40"
+                            lazy
+                            transition="scale-transition"
+                            offset-y
+                            full-width
+                            max-width="290px"
+                            min-width="290px"
+                          >
+                            <template v-slot:activator="{ on }">
+                              <v-text-field
+                                v-model="computedDateFormatted"
+                                label="Date"
+                                persistent-hint
+                                prepend-icon="event"
+                                readonly
+                                v-on="on"
+                              ></v-text-field>
+                            </template>
+                            <v-date-picker
+                              min="2018-01-01"
+                              :max="currentMonth+'-'+new Date().getDate()"
+                              v-model="createdDate"
+                              no-title
+                              @input="datePicker = false"
+                            ></v-date-picker>
+                          </v-menu>
+                        </v-flex>
+                        <v-flex xs4>
+                          <v-text-field
+                            label="Amount"
+                            v-model="amount"
+                            :rules="amountRules"
+                            required
+                          ></v-text-field>
+                        </v-flex>
+
+                        <v-flex xs4>
+                          <v-menu allow-overflow auto bottom offset-y>
+                            <template v-slot:activator="{ on }">
+                              <span class="envelops-label">Envelop Type</span>
+                              <v-btn flat block v-on="on" v-if="currentIcon">
+                                <v-icon left dark>{{currentIcon.icon}}</v-icon>
+
+                                {{currentIcon.name}}
+                              </v-btn>
+                            </template>
+                            <v-list>
+                              <v-list-tile
+                                v-for="(ic, index) in icons"
+                                :key="index"
+                                @click="setIcon(ic)"
+                              >
+                                <v-list-tile-avatar>
+                                  <v-icon>{{ ic.icon }}</v-icon>
+                                </v-list-tile-avatar>
+
+                                <v-list-tile-title>{{ ic.name }}</v-list-tile-title>
+                              </v-list-tile>
+                            </v-list>
+                          </v-menu>
+                        </v-flex>
+                      </v-layout>
+                      <v-layout>
+                        <v-flex xs12 text-xs-right>
+                          <v-btn @click="createEnvelop" :disabled="! valid" color="primary">Save Envelop</v-btn>
+                        </v-flex>
+                      </v-layout>
+                    </v-container>
+                  </v-form>
+                </v-flex>
+              </v-layout>
+            </v-card>
+          </v-dialog>
+
           <!-- delete dialog -->
           <v-dialog v-if="envelopToDelete" persistent v-model="deleteDialog" max-width="290">
             <v-card>
@@ -221,6 +331,8 @@
 <script>
 import { mapGetters } from "vuex";
 import _ from "lodash";
+import axios from "axios";
+import { baseUrl } from "../api";
 
 export default {
   name: "Category",
@@ -232,7 +344,10 @@ export default {
     ...mapGetters("envelop", {
       errors: "getErrors",
       success: "getSuccess"
-    })
+    }),
+    computedDateFormatted() {
+      return this.formatDate(this.createdDate);
+    }
   },
   watch: {
     category(newVal) {
@@ -312,7 +427,19 @@ export default {
     envelopToDelete: null,
     deleteDialog: false,
     snackbarSuccess: false,
-    snackbarError: false
+    snackbarError: false,
+    dialog: false,
+    type: 0,
+    icons: [],
+    currentIcon: null,
+    datePicker: false,
+    createdDate: new Date().toISOString().substr(0, 10),
+    amount: "",
+    amountRules: [
+      v => !!v || "Amount is required",
+      v => !isNaN(v) || "Amount must be a number"
+    ],
+    valid: false
   }),
 
   methods: {
@@ -341,7 +468,45 @@ export default {
       this.envelopToDelete = null;
     },
     closeSnakBar() {
-      this.$store.dispatch("category/emptyMessages");
+      this.$store.dispatch("envelop/emptyMessages");
+    },
+    openDialog() {
+      this.$store.dispatch("envelop/emptyMessages");
+      this.dialog = true;
+    },
+
+    closeDialog() {
+      this.$store.dispatch("envelop/emptyMessages");
+      this.dialog = false;
+    },
+    loadIcons(icons) {
+      const settings = JSON.parse(localStorage.getItem("settings"));
+      this.icons = JSON.parse(settings[icons]);
+      this.currentIcon = this.icons[0];
+    },
+    formatDate(date) {
+      if (!date) return null;
+
+      const [year, month, day] = date.split("-");
+      return `${day}/${month}/${year}`;
+    },
+    setIcon(icon) {
+      this.currentIcon = icon;
+    },
+    createEnvelop() {
+      let type = this.type === 0 ? "spent" : "income";
+
+      this.$store.dispatch("envelop/createEnvelop", {
+        category_id: this.category.id,
+        name: this.currentIcon.name,
+        icon: this.currentIcon.icon,
+        type: type,
+        amount: this.amount,
+        created_at: this.createdDate
+      });
+      this.amount="";
+      this.currentIcon= this.icons[0];
+      this.createdDate= new Date().toISOString().substr(0, 10);
     }
   },
   mounted() {
@@ -350,7 +515,25 @@ export default {
       month: new Date().getMonth() + 1,
       year: new Date().getFullYear()
     });
-    // console.log(this.category)
+
+    const settings = JSON.parse(localStorage.getItem("settings"));
+    if (settings !== null) {
+      this.icons = JSON.parse(settings.spent_envelops);
+      this.currentIcon = this.icons[0];
+    } else {
+      axios
+        .get(baseUrl + "settings")
+        .then(response => {
+          localStorage.setItem(
+            "settings",
+            JSON.stringify(response.data.settings)
+          );
+
+          this.icons = JSON.parse(response.data.settings.spent_envelops);
+          this.currentIcon = this.icons[0];
+        })
+        .catch(() => {});
+    }
   }
 };
 </script>
@@ -371,6 +554,31 @@ export default {
 .v-sheet--offset {
   top: -24px;
   position: relative;
+}
+.type-button {
+  width: 100%;
+}
+.type-button button {
+  width: 100% !important;
+}
+.envelop-button {
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  align-items: stretch;
+  box-shadow: none;
+  padding: 0px;
+  margin-top: 20px;
+}
+
+span.envelops-label {
+  display: block;
+  font-size: 16px;
+  color: rgba(0, 0, 0, 0.54);
+  transform: scale(0.75);
+  margin-bottom: -7px;
+  text-align: left;
+  height: 20px;
+  transform-origin: left;
 }
 </style>
 
