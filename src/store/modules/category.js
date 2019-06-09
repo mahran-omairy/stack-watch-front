@@ -1,6 +1,6 @@
 import axios from "axios";
 import { baseUrl } from "../../api";
-
+import router from "../../router";
 // initial state
 const state = {
   categories: [],
@@ -41,7 +41,7 @@ const actions = {
     const accessToken = localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = "Bearer " + accessToken;
 
-    axios.post(baseUrl + "category", payload)
+    axios.post(baseUrl + "categories", payload)
       .then(response => {
         localStorage.setItem("token", response.data.token);
         commit("updateSuccess", [response.data.message]);
@@ -86,7 +86,7 @@ const actions = {
     const accessToken = localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = "Bearer " + accessToken;
 
-    axios.delete(baseUrl + "category/" + payload.id)
+    axios.delete(baseUrl + "categories/" + payload.id)
       .then(response => {
         localStorage.setItem("token", response.data.token);
         commit("updateErrors", []);
@@ -109,7 +109,7 @@ const actions = {
     const accessToken = localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = "Bearer " + accessToken;
 
-    axios.put(baseUrl + "category/" + payload.id, {
+    axios.put(baseUrl + "categories/" + payload.id, {
       name: payload.name,
       icon: payload.icon
     })
@@ -169,7 +169,7 @@ const actions = {
     const accessToken = localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = "Bearer " + accessToken;
 
-    axios.get(baseUrl + "category/" + payload.id, {
+    axios.get(baseUrl + "categories/" + payload.id, {
       params:{
         month: payload.month,
         year: payload.year
@@ -187,6 +187,9 @@ const actions = {
         for (let key in errorObj.response.data.extra) {
           for (let i = 0; i < errorObj.response.data.extra[key].length; i++)
             ar.push(errorObj.response.data.extra[key][i]);
+        }
+        if(errorObj.response.status === 404){
+          router.push("/404");
         }
         commit("updateErrors", ar);
         commit("updateSuccess", []);

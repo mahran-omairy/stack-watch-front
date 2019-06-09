@@ -130,7 +130,7 @@
               <v-divider></v-divider>
 
               <v-subheader>Custom category</v-subheader>
-              <v-form v-model="valid">
+              <v-form ref="ctegoryAddForm" v-model="valid">
                 <v-container fluid>
                   <v-layout>
                     <v-flex xs4>
@@ -322,6 +322,7 @@ export default {
       this.addCategory(this.icon, this.category);
       this.icon = "fa-coins";
       this.category = "";
+      this.$refs.ctegoryAddForm.resetValidation();
     },
     addCategory(icon, name) {
       this.$store.dispatch("category/createCategory", {

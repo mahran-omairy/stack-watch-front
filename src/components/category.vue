@@ -153,7 +153,7 @@
                       <v-card-text>
                         <v-list two-line>
                           <template
-                            v-for="(envelop, index) in category.envelops.filter(el => el.type=='spent')"
+                            v-for="(envelop, index) in distribution"
                           >
                             <v-list-tile :key="envelop.id">
                               <v-list-tile-content>
@@ -202,7 +202,7 @@
                 </v-toolbar-items>
               </v-toolbar>
               <v-layout row justify-center>
-                <v-flex xs5>
+                <v-flex xs5 mt-2>
                   <v-btn-toggle class="type-button" mandatory v-model="type">
                     <v-layout>
                       <v-flex xs6>
@@ -214,7 +214,7 @@
                     </v-layout>
                   </v-btn-toggle>
 
-                  <v-form v-model="valid">
+                  <v-form ref="envelopAddForm" v-model="valid">
                     <v-container fluid>
                       <v-layout>
                         <v-flex xs4>
@@ -347,10 +347,36 @@ export default {
     }),
     computedDateFormatted() {
       return this.formatDate(this.createdDate);
-    }
+    },
+    // collect unique spent amounts based on envelop name 
+    distribution(){
+      const uniqueNames = new Set();
+
+      const spent = this.category.envelops
+                  // keep only spent
+                  .filter(el => el.type=='spent')
+                  // sum us the values
+                  .map( ({name}) => {
+                    const obj= {};
+                    obj.name = name;
+                    obj.amount =
+                      this.category.envelops.filter(el =>  obj.name === el.name)
+                      .reduce((accumulator, currentEl) => accumulator + currentEl.amount, 0);
+                    return obj;
+                  })
+                  // getting only unique objects
+                  .filter(el => {
+                    const duplicate = uniqueNames.has(el.name);
+                    uniqueNames.add(el.name);
+                    return !duplicate;
+                  })
+              
+        return spent;
+      }
   },
   watch: {
     category(newVal) {
+      // update breadcrumbs
       this.breadcrumbs = [
         {
           text: "Overview",
@@ -363,10 +389,11 @@ export default {
         disabled: true,
         href: ""
       });
+      // sum up the spent and income values
       let [spent, income] = [0, 0];
 
       let currentDate = this.date.split("-");
-
+      // fill the line data
       let line = new Array(
         new Date(currentDate[0], currentDate[1], 0).getDate()
       );
@@ -388,6 +415,7 @@ export default {
       this.income = income;
       this.line = line;
     },
+    // update succes message
     success(newVal) {
       if (_.isEmpty(newVal)) {
         this.snackbarSuccess = false;
@@ -402,6 +430,7 @@ export default {
         });
       }
     },
+    // update error message
     errors(newVal) {
       if (_.isEmpty(newVal)) {
         this.snackbarError = false;
@@ -507,6 +536,7 @@ export default {
       this.amount="";
       this.currentIcon= this.icons[0];
       this.createdDate= new Date().toISOString().substr(0, 10);
+      this.$refs.envelopAddForm.resetValidation();
     }
   },
   mounted() {

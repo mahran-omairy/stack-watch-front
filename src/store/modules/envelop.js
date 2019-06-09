@@ -26,7 +26,7 @@ const actions = {
     const accessToken = localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = "Bearer " + accessToken;
 
-    axios.post(baseUrl + "envelop", payload)
+    axios.post(baseUrl + "envelops", payload)
       .then(response => {
         localStorage.setItem("token", response.data.token);
         commit("updateSuccess", [response.data.message]);
@@ -50,7 +50,7 @@ const actions = {
     const accessToken = localStorage.getItem("token");
     axios.defaults.headers.common['Authorization'] = "Bearer " + accessToken;
 
-    axios.delete(baseUrl + "envelop/" + payload.id)
+    axios.delete(baseUrl + "envelops/" + payload.id)
       .then(response => {
         localStorage.setItem("token", response.data.token);
         commit("updateErrors", []);
